@@ -27,22 +27,41 @@ jobs:
           cache: gradle
           cache-dependency-path: upstream/**/*.gradle*
 
-      - name: Rename app for TV build
+      - name: Apply TVNoDPI TV interface
         shell: bash
         run: |
+          set -euxo pipefail
+          cp tv/activity_main.xml upstream/app/src/main/res/layout/activity_main.xml
+
           python3 - <<'PY'
           from pathlib import Path
           import re
-          root=Path('upstream')
-          changed=0
+
+          root = Path('upstream')
+          changed = 0
           for p in root.rglob('strings.xml'):
-              try: s=p.read_text(encoding='utf-8')
-              except Exception: continue
+              try:
+                  s = p.read_text(encoding='utf-8')
+              except Exception:
+                  continue
               if 'name="app_name"' in s:
-                  n=re.sub(r'<string name="app_name">.*?</string>', '<string name="app_name">TVNoDPI</string>', s)
+                  n = re.sub(
+                      r'<string name="app_name">.*?</string>',
+                      '<string name="app_name">TVNoDPI</string>',
+                      s
+                  )
                   if n != s:
-                      p.write_text(n, encoding='utf-8'); changed += 1
+                      p.write_text(n, encoding='utf-8')
+                      changed += 1
           print('renamed string files:', changed)
+
+          # TV usability: put focus on the large power button when the screen opens.
+          main = root / 'app/src/main/java/io/github/romanvht/byedpi/activities/MainActivity.kt'
+          s = main.read_text(encoding='utf-8')
+          needle = '        ShortcutUtils.update(this)\n'
+          if needle in s and 'binding.statusButtonCard.requestFocus()' not in s:
+              s = s.replace(needle, needle + '        binding.statusButtonCard.requestFocus()\n')
+          main.write_text(s, encoding='utf-8')
           PY
 
       - name: Build debug APKs
@@ -69,7 +88,6 @@ jobs:
             cp "$ARM64" out/TVNoDPI-arm64-v8a-debug.apk
           fi
 
-          # Fallback: if naming differs, copy every debug APK so we can inspect exact outputs.
           if [ ! -e out/TVNoDPI-universal-debug.apk ] && [ ! -e out/TVNoDPI-arm64-v8a-debug.apk ]; then
             cp upstream/app/build/outputs/apk/debug/*.apk out/ || true
           fi
@@ -80,6 +98,6 @@ jobs:
       - name: Upload compatible TVNoDPI APKs
         uses: actions/upload-artifact@v4
         with:
-          name: TVNoDPI-APK-compatible
+          name: TVNoDPI-TV-APK
           path: out/*.apk
           if-no-files-found: error
