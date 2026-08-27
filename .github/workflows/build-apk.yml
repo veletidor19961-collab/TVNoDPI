@@ -33,51 +33,7 @@ jobs:
           set -euxo pipefail
           cp tv/activity_main.xml upstream/app/src/main/res/layout/activity_main.xml
           cp tv/menu_main.xml upstream/app/src/main/res/menu/menu_main.xml
-
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          root = Path('upstream')
-
-          # App name.
-          for p in root.rglob('strings.xml'):
-              try:
-                  s = p.read_text(encoding='utf-8')
-              except Exception:
-                  continue
-              if 'name="app_name"' in s:
-                  s = re.sub(
-                      r'<string name="app_name">.*?</string>',
-                      '<string name="app_name">TVNoDPI</string>',
-                      s
-                  )
-                  p.write_text(s, encoding='utf-8')
-
-          # TV home: focus power button and expose Settings from the top toolbar.
-          main = root / 'app/src/main/java/io/github/romanvht/byedpi/activities/MainActivity.kt'
-          s = main.read_text(encoding='utf-8')
-
-          focus_needle = '        ShortcutUtils.update(this)\n'
-          if focus_needle in s and 'binding.statusButtonCard.requestFocus()' not in s:
-              s = s.replace(
-                  focus_needle,
-                  focus_needle + '        binding.statusButtonCard.requestFocus()\n'
-              )
-
-          settings_case = '''            R.id.action_settings -> {
-                val settingsIntent = Intent(this, SettingsActivity::class.java)
-                startActivity(settingsIntent)
-                true
-            }
-
-'''
-          diagnostics_case = '            R.id.action_diagnostics -> {\n'
-          if 'R.id.action_settings -> {' not in s:
-              s = s.replace(diagnostics_case, settings_case + diagnostics_case)
-
-          main.write_text(s, encoding='utf-8')
-          PY
+          python3 tv/patch_main.py upstream
 
       - name: Build debug APKs
         working-directory: upstream
@@ -90,23 +46,14 @@ jobs:
         run: |
           set -euxo pipefail
           mkdir -p out
-          echo "Built APKs:"
           find upstream/app/build/outputs/apk -type f -name '*.apk' -print
-
           UNIVERSAL=$(find upstream/app/build/outputs/apk -type f -name '*universal*debug*.apk' | head -n1 || true)
           ARM64=$(find upstream/app/build/outputs/apk -type f \( -name '*arm64-v8a*debug*.apk' -o -name '*arm64*debug*.apk' \) | head -n1 || true)
-
-          if [ -n "$UNIVERSAL" ]; then
-            cp "$UNIVERSAL" out/TVNoDPI-universal-debug.apk
-          fi
-          if [ -n "$ARM64" ]; then
-            cp "$ARM64" out/TVNoDPI-arm64-v8a-debug.apk
-          fi
-
+          if [ -n "$UNIVERSAL" ]; then cp "$UNIVERSAL" out/TVNoDPI-universal-debug.apk; fi
+          if [ -n "$ARM64" ]; then cp "$ARM64" out/TVNoDPI-arm64-v8a-debug.apk; fi
           if [ ! -e out/TVNoDPI-universal-debug.apk ] && [ ! -e out/TVNoDPI-arm64-v8a-debug.apk ]; then
             cp upstream/app/build/outputs/apk/debug/*.apk out/ || true
           fi
-
           ls -lh out/
           test -n "$(find out -type f -name '*.apk' -print -quit)"
 
