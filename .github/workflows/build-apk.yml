@@ -32,6 +32,7 @@ jobs:
         run: |
           set -euxo pipefail
           cp tv/activity_main.xml upstream/app/src/main/res/layout/activity_main.xml
+          cp tv/activity_main.xml upstream/app/src/main/res/layout-land/activity_main.xml
           cp tv/menu_main.xml upstream/app/src/main/res/menu/menu_main.xml
           cp tv/main_settings.xml upstream/app/src/main/res/xml/main_settings.xml
           cp tv/MainSettingsFragment.kt upstream/app/src/main/java/io/github/romanvht/byedpi/fragments/MainSettingsFragment.kt
