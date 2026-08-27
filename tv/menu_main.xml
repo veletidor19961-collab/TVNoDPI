@@ -9,4 +9,26 @@
         android:title="@string/title_settings"
         app:showAsAction="always" />
 
+    <!-- Kept only so upstream MainActivity continues to compile. They are not shown in the toolbar. -->
+    <item
+        android:id="@+id/action_diagnostics"
+        android:orderInCategory="1"
+        android:title="@string/diagnostics"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_save_logs"
+        android:orderInCategory="2"
+        android:title="@string/save_logs"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_close_app"
+        android:orderInCategory="3"
+        android:title="@string/close_app"
+        android:visible="false"
+        app:showAsAction="never" />
+
 </menu>
