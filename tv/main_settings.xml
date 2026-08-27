@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="Стратегии">
+
+        <Preference
+            android:key="tv_strategy_editor"
+            android:icon="@drawable/ic_tune"
+            android:title="Редактор"
+            android:summary="Редактирование и выбор стратегий обхода" />
+
+        <Preference
+            android:key="tv_strategy_test"
+            android:icon="@drawable/ic_speed"
+            android:title="Подбор"
+            android:summary="Проверка и подбор рабочей стратегии" />
+
+        <Preference
+            android:key="tv_domain_lists"
+            android:icon="@drawable/ic_filter_list"
+            android:title="Списки"
+            android:summary="Списки доменов и правила обхода" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Общие">
+
+        <SwitchPreferenceCompat
+            android:key="autostart"
+            android:icon="@drawable/ic_power"
+            android:title="Автозапуск"
+            android:summary="Запускать TVNoDPI после включения приставки"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
