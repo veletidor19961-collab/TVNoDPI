@@ -45,24 +45,41 @@ jobs:
           print('renamed string files:', changed)
           PY
 
-      - name: Build debug APK
+      - name: Build debug APKs
         working-directory: upstream
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
 
-      - name: Collect APK
+      - name: Collect compatible APKs
         shell: bash
         run: |
+          set -euxo pipefail
           mkdir -p out
-          APK=$(find upstream -type f -path '*/build/outputs/apk/debug/*.apk' | head -n1)
-          test -n "$APK"
-          cp "$APK" out/TVNoDPI-debug.apk
-          ls -lh out/TVNoDPI-debug.apk
+          echo "Built APKs:"
+          find upstream/app/build/outputs/apk -type f -name '*.apk' -print
 
-      - name: Upload TVNoDPI APK
+          UNIVERSAL=$(find upstream/app/build/outputs/apk -type f -name '*universal*debug*.apk' | head -n1 || true)
+          ARM64=$(find upstream/app/build/outputs/apk -type f \( -name '*arm64-v8a*debug*.apk' -o -name '*arm64*debug*.apk' \) | head -n1 || true)
+
+          if [ -n "$UNIVERSAL" ]; then
+            cp "$UNIVERSAL" out/TVNoDPI-universal-debug.apk
+          fi
+          if [ -n "$ARM64" ]; then
+            cp "$ARM64" out/TVNoDPI-arm64-v8a-debug.apk
+          fi
+
+          # Fallback: if naming differs, copy every debug APK so we can inspect exact outputs.
+          if [ ! -e out/TVNoDPI-universal-debug.apk ] && [ ! -e out/TVNoDPI-arm64-v8a-debug.apk ]; then
+            cp upstream/app/build/outputs/apk/debug/*.apk out/ || true
+          fi
+
+          ls -lh out/
+          test -n "$(find out -type f -name '*.apk' -print -quit)"
+
+      - name: Upload compatible TVNoDPI APKs
         uses: actions/upload-artifact@v4
         with:
-          name: TVNoDPI-APK
-          path: out/TVNoDPI-debug.apk
+          name: TVNoDPI-APK-compatible
+          path: out/*.apk
           if-no-files-found: error
